@@ -194,6 +194,17 @@ describe('CalendarHeatmap props', () => {
     expect(wrapper.find('[data-test="ok"]')).toHaveLength(1);
   });
 
+  it('should add month borders', () => {
+    const wrapper = shallow(<CalendarHeatmap
+      endDate={new Date('2018-09-10')}
+      startDate={new Date('2018-07-10')}
+      showMonthBorders={true}
+      values={[]}
+    />);
+
+    expect(wrapper.find('polyline.react-calendar-heatmap-month-border')).toHaveLength(2);
+  });
+
   describe('tooltipDataAttrs', () => {
     it('allows a function to be passed', () => {
       const today = new Date();

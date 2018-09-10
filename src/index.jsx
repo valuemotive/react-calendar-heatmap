@@ -202,6 +202,20 @@ class CalendarHeatmap extends React.Component {
     ];
   }
 
+  getMonthLinePoints(weekIndex, dayIndex) {
+    const squareSize = this.getSquareSizeWithGutter();
+    const linePosition = (weekIndex + 1) * squareSize;
+    const prevWeekLinePosition = weekIndex * squareSize;
+    const prevSquarePosition = dayIndex * squareSize;
+    const height = squareSize * DAYS_IN_WEEK;
+
+    return dayIndex === 0
+      ? `${prevWeekLinePosition},0 ${prevWeekLinePosition},${height}`
+      : `${linePosition},0 ${linePosition},${prevSquarePosition} ` +
+          `${prevWeekLinePosition},${prevSquarePosition} ` +
+          `${prevWeekLinePosition},${height}`;
+  }
+
   getMonthLabelCoordinates(weekIndex) {
     if (this.latestProps.horizontal) {
       return [
@@ -305,6 +319,41 @@ class CalendarHeatmap extends React.Component {
     });
   }
 
+  renderCalendarBorder() {
+    const squareSize = this.getSquareSizeWithGutter();
+    const gutter = this.latestProps.gutterSize;
+    const weekCount = this.getWeekCount();
+    const emptyDaysStart = this.latestProps.showOutOfRangeDays
+      ? 0 : this.getNumEmptyDaysAtStart();
+    const emptyDaysEnd = this.latestProps.showOutOfRangeDays
+      ? 0 : this.getNumEmptyDaysAtEnd();
+
+    return (
+      <path d={
+        `M${emptyDaysStart > 0 ? squareSize : 0},${emptyDaysStart * squareSize} ` +
+        `H0 V${(squareSize * DAYS_IN_WEEK) - gutter} H${(emptyDaysEnd > 0 ?
+          (weekCount - 1) * squareSize : weekCount * squareSize) - gutter} ` +
+        `V${(squareSize * (DAYS_IN_WEEK - emptyDaysEnd)) - gutter} ` +
+        `H${(weekCount * squareSize) - gutter} V0 ` +
+        `H${emptyDaysStart > 0 ? squareSize : 0} Z`}
+      />);
+  }
+
+  renderMonthBorders() {
+    const startDate = this.getStartDateWithEmptyDays();
+    return getRange(this.getWeekCount()).map(weekIndex => getRange(DAYS_IN_WEEK).map((dayIndex) => {
+      const line = startDate.getDate() === 1 ? (
+        <polyline
+          key={(weekIndex * DAYS_IN_WEEK) + dayIndex}
+          points={this.getMonthLinePoints(weekIndex, dayIndex)}
+          className={`${CSS_PSEDUO_NAMESPACE}month-border`}
+        />
+      ) : null;
+      startDate.setDate(startDate.getDate() + 1);
+      return line;
+    }));
+  }
+
   render() {
     return (
       <svg className="react-calendar-heatmap" viewBox={this.getViewBox()}>
@@ -317,6 +366,12 @@ class CalendarHeatmap extends React.Component {
         <g transform={this.getTransformForWeekdayLabels()} className={`${CSS_PSEDUO_NAMESPACE}weekday-labels`}>
           {this.renderWeekdayLabels()}
         </g>
+        {this.props.showMonthBorders && this.props.horizontal &&
+          <g transform={this.getTransformForAllWeeks()} className={`${CSS_PSEDUO_NAMESPACE}month-border`}>
+            {this.renderCalendarBorder()}
+            {this.renderMonthBorders()}
+          </g>
+        }
       </svg>
     );
   }
@@ -343,6 +398,7 @@ CalendarHeatmap.propTypes = {
   onMouseOver: PropTypes.func, // callback function when mouse pointer is over a square
   onMouseLeave: PropTypes.func, // callback function when mouse pointer is left a square
   transformDayElement: PropTypes.func, // function to further transform the svg element for a single day
+  showMonthBorders: PropTypes.bool, // whether to show month borders (currently supported only with horizontal orientation)
 };
 
 CalendarHeatmap.defaultProps = {
@@ -356,6 +412,7 @@ CalendarHeatmap.defaultProps = {
   monthLabels: MONTH_LABELS,
   weekdayLabels: DAY_LABELS,
   classForValue: value => (value ? 'color-filled' : 'color-empty'),
+  showMonthBorders: false,
 };
 
 export default CalendarHeatmap;

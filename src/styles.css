@@ -19,6 +19,12 @@
   stroke-width: 1px;
 }
 
+.react-calendar-heatmap-month-border {
+  fill: none;
+  stroke: #000;
+  stroke-width: 0.5;
+}
+
 /*
  * Default color scale
  */
